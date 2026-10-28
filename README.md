@@ -19,24 +19,15 @@ Or open `prototype.ipynb` with the `.venv` kernel to walk through the steps.
 | III | 5. Representation report | `uafe.pipeline.representation_report` |
 | III | 6. Per-individual fit score | `uafe.pipeline.fit_instance`, `fit_instance_from_names` |
 
-## Reused from the draft notebook
 
-`compute_pr_i`, `compute_log_factorial_sum`, `compute_normalized_pr_i`, `compute_similarity`,
-`generate_distribution` and `generate_mixed_sparsity_distribution` are copied unchanged into
-`uafe/measures.py` and `uafe/data.py`. `tests/test_measures.py` fails if they drift from the
-notebook. The rarity logic from the notebook's MAIN cell becomes `compute_rarity`. Two vectorised
-or log-space wrappers (`jaccard_matrix`/`compute_system_j` and `compute_log10_pr_i`) are tested
-against the originals.
-
-## Modelling choices to check against the paper
+## Modelling choices
 
 - **Synthetic heterogeneity.** `generate_distribution` gives every feature the same expected
   prevalence, so stacking blocks is what creates the long tail. The blocks are four shared tiers
   (sparsity 0.6 → 0.04), 30 features per subgroup that are common only within that subgroup
   (groups A–D are 60/25/10/5 % of the population), and 300 idiosyncratic features that one or two
   people each hold.
-- **Outcome y.** A sparse linear score over shared and subgroup features (idiosyncratic features
-  carry no signal) plus noise, split at the median.
+- **Outcome y.** A sparse linear score over shared and subgroup features plus noise, split at the median.
 - **Two Jaccard quantities.** In Phase I, `j_pop` is the mean J(d_i, d_j) against everyone else.
   In Phases II and III, `j_sys` is J(d_i, r_i), where r_i = d_i restricted to the selected
   features. Because r_i ⊆ d_i, this equals the share of i's features the system keeps.
@@ -45,7 +36,7 @@ against the originals.
   τ = 0. J_system and accuracy are both measured out-of-fold.
 - **Choosing τ.** The default picks the highest accuracy among thresholds with J_system ≥
   `--min-coverage` (0.6).
-- **Fit score** for a new x is j_sys. Its band comes from the percentile within the pooled
+- **Fit score** for a new individual i (new arrival) is j_sys. Its label comes from the percentile within the pooled
   population's out-of-fold j_sys: below P5 is poor, below P25 is partial, otherwise well
-  represented. Pr_i and Rare are computed with x added to the pool, matching how training
-  individuals are measured, which keeps Pr_i defined when x has unseen features.
+  represented. Pr_i and Rare are computed with i added to the pool, matching how training
+  individuals are measured, which keeps Pr_i defined when the new i has unseen features.
